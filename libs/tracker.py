@@ -32,6 +32,12 @@ class Sort_OH(object):
 
     NOTE: The number of objects returned may differ from the number of detections provided.
     """
+        dets_only_bbox = []
+        for d in dets:
+            dets_only_bbox.append(d[0])
+
+        dets_only_bbox = np.asarray(dets_only_bbox)
+
         self.frame_count += 1
         # get predicted locations from existing trackers.
         trks = np.zeros((len(self.trackers), 5))
@@ -61,7 +67,7 @@ class Sort_OH(object):
             self.trackers.pop(t)
             trks = np.delete(trks, t, 0)
 
-        matched, unmatched_dets, unmatched_trks, occluded_trks = association.associate_detections_to_trackers(self, dets, trks, area_avg, self.iou_threshold)
+        matched, unmatched_dets, unmatched_trks, occluded_trks = association.associate_detections_to_trackers(self, dets_only_bbox, trks, area_avg, self.iou_threshold)
 
         # update matched trackers with assigned detections
         unmatched_trks_pos = []
@@ -71,10 +77,10 @@ class Sort_OH(object):
                     if t not in occluded_trks:
                         # Update according to associated detection
                         d = matched[np.where(matched[:, 1] == t)[0], 0]
-                        trk.update(dets[d, :][0], 1)
+                        trk.update(dets[d][0], dets[d][1], dets[d][2], 1)
                     else:
                         # Update according to estimated bounding box
-                        trk.update(trks[t, :], 0)
+                        trk.update(trks[t, :], trk.classification, trk.certainty, 0)
                 else:
                     unmatched_trks_pos.append(np.concatenate((trk.get_state()[0], [trk.id + 1])).reshape(1, -1))
 
@@ -82,13 +88,13 @@ class Sort_OH(object):
         if self.frame_count <= self.min_hits:
             for i in unmatched_dets:
                 # Put condition on uncertainty
-                if dets[i, 4] > 0.6:
-                    trk = kalman_tracker.KalmanBoxTracker(dets[i, :], 0, dets[i, :]) # put dets[i, :] as dummy data for last argument
+                if dets[i][0][4] > 0.6:
+                    trk = kalman_tracker.KalmanBoxTracker(dets[i][0], 0, dets[i][0], dets[i][1], dets[i][2]) # put dets[i, :] as dummy data for last argument
                     self.trackers.append(trk)
         else:
             self.unmatched = []
             for i in unmatched_dets:
-                self.unmatched.append(dets[i, :])
+                self.unmatched.append(dets[i][0].append(i))
 
             # Build new targets
             if (len(self.unmatched_before_before) != 0) and (len(self.unmatched_before) != 0) and (len(self.unmatched) != 0):
@@ -103,7 +109,10 @@ class Sort_OH(object):
                     for i, new_tracker in enumerate(new_trackers):
                         new_trk_certainty = unm[new_tracker[0], 4] + unmb[new_tracker[1], 4] + unmbb[new_tracker[2], 4]
                         if new_trk_certainty > 2:
-                            trk = kalman_tracker.KalmanBoxTracker(unm[new_tracker[0], :], 1, unmb[new_tracker[1], :])
+                            det_index = unm[new_tracker[0], 5]
+                            classification = dets[det_index][1]
+                            certainty = dets[det_index][2]
+                            trk = kalman_tracker.KalmanBoxTracker(unm[new_tracker[0], :5], 1, unmb[new_tracker[1], :5], classification, certainty)
                             self.trackers.append(trk)
                             # remove matched detection from unmatched arrays
                             self.unmatched.pop(del_ind[i, 0])

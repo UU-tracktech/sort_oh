@@ -9,7 +9,7 @@ class KalmanBoxTracker(object):
   """
     count = 0
 
-    def __init__(self, bbox, init_mode, bbox_before):
+    def __init__(self, bbox, init_mode, bbox_before, classification, certainty):
         """
     Initialises a tracker using initial bounding box.
     """
@@ -48,12 +48,16 @@ class KalmanBoxTracker(object):
         # self.oc_number = 0  # Number of time an object is occluded
         self.time_since_observed = 0    # The period that an object is detected as occluded
         self.confidence = 0.5
+        self.classification = classification
+        self.certainty = certainty
 
-    def update(self, bbox, isz):
+    def update(self, bbox, classification, certainty, isz):
         """
     Updates the state vector with observed bbox.
     """
         self.time_since_update = 0
+        self.classification = classification
+        self.certainty = certainty
         if isz == 0:
             # decrease area change ratio
             self.kf.x[6] /= 2
