@@ -76,7 +76,7 @@ class Sort_OH(object):
                 if t not in unmatched_trks:
                     if t not in occluded_trks:
                         # Update according to associated detection
-                        d = matched[np.where(matched[:, 1] == t)[0], 0]
+                        d = int(matched[np.where(matched[:, 1] == t)[0], 0])
                         trk.update(dets[d][0], dets[d][1], dets[d][2], 1)
                     else:
                         # Update according to estimated bounding box
@@ -94,7 +94,10 @@ class Sort_OH(object):
         else:
             self.unmatched = []
             for i in unmatched_dets:
-                self.unmatched.append(dets[i][0].append(i))
+                # Add index to detection.
+                detection_obj = list(dets[i][0])
+                detection_obj.append(i)
+                self.unmatched.append(np.asarray(detection_obj))
 
             # Build new targets
             if (len(self.unmatched_before_before) != 0) and (len(self.unmatched_before) != 0) and (len(self.unmatched) != 0):
@@ -109,7 +112,7 @@ class Sort_OH(object):
                     for i, new_tracker in enumerate(new_trackers):
                         new_trk_certainty = unm[new_tracker[0], 4] + unmb[new_tracker[1], 4] + unmbb[new_tracker[2], 4]
                         if new_trk_certainty > 2:
-                            det_index = unm[new_tracker[0], 5]
+                            det_index = int(unm[new_tracker[0], 5])
                             classification = dets[det_index][1]
                             certainty = dets[det_index][2]
                             trk = kalman_tracker.KalmanBoxTracker(unm[new_tracker[0], :5], 1, unmb[new_tracker[1], :5], classification, certainty)
