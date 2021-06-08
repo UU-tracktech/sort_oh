@@ -10,7 +10,7 @@ def associate_detections_to_trackers(mot_tracker, detections, trackers, average_
   Returns 5 lists of matches, unmatched_detections, unmatched_trackers, occluded_trackers and unmatched ground truths
   """
     if len(trackers) == 0 or len(detections) == 0:
-        return np.empty((0, 2), dtype=int), np.arange(len(detections)), np.empty((0, 1), dtype=int), np.empty((0, 1), dtype=int), np.empty((0, 1), dtype=int)
+        return np.empty((0, 2), dtype=int), np.arange(len(detections)), np.empty((0, 1), dtype=int), np.empty((0, 1), dtype=int)
 
     # assign only according to iou
     # calculate intersection over union cost
