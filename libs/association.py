@@ -4,7 +4,7 @@ from . import calculate_cost
 from . import visualization
 
 
-def associate_detections_to_trackers(mot_tracker, detections, trackers, groundtruths, average_area, iou_threshold=0.3):
+def associate_detections_to_trackers(mot_tracker, detections, trackers, average_area, iou_threshold):
     """
   Assigns detections to tracked object (both represented as bounding boxes)
   Returns 5 lists of matches, unmatched_detections, unmatched_trackers, occluded_trackers and unmatched ground truths
@@ -132,22 +132,23 @@ def associate_detections_to_trackers(mot_tracker, detections, trackers, groundtr
                 unmatched_trackers.append(ut)
 
     # find unmatched ground truths
-    unmatched_groundtruths = []
-    if visualization.DisplayState.display_gt_diff:
-        found_trackers = trackers
-        for i in reversed(np.sort(unmatched_trackers)):
-            found_trackers = np.delete(found_trackers, i, 0)
-        iou_matrix_1 = calculate_cost.cal_iou(groundtruths, found_trackers)
-        # first column: ground truth indexes, second column: object indexes
-        matched_indices_1 = linear_sum_assignment(-iou_matrix_1)
-        matched_indices_1 = np.asarray(matched_indices_1)
-        matched_indices_1 = np.transpose(matched_indices_1)
+    # unmatched_groundtruths = []
+    # if visualization.DisplayState.display_gt_diff:
+    #     found_trackers = trackers
+    #     for i in reversed(np.sort(unmatched_trackers)):
+    #         found_trackers = np.delete(found_trackers, i, 0)
+    #     iou_matrix_1 = calculate_cost.cal_iou(groundtruths, found_trackers)
+    #     # first column: ground truth indexes, second column: object indexes
+    #     matched_indices_1 = linear_sum_assignment(-iou_matrix_1)
+    #     matched_indices_1 = np.asarray(matched_indices_1)
+    #     matched_indices_1 = np.transpose(matched_indices_1)
+    #
+    #     for g, gt in enumerate(groundtruths):
+    #         if g not in matched_indices_1[:, 0]:
+    #             unmatched_groundtruths.append(g)
 
-        for g, gt in enumerate(groundtruths):
-            if g not in matched_indices_1[:, 0]:
-                unmatched_groundtruths.append(g)
-
-    return matches, unmatched_detections, unmatched_trackers, np.array(occluded_trackers), np.array(unmatched_groundtruths)
+    return matches, unmatched_detections, unmatched_trackers, np.array(occluded_trackers)
+        # , np.array(unmatched_groundtruths)
 
 
 def find_new_trackers(detections, detections_before, iou_threshold=0.3):
