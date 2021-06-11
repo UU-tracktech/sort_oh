@@ -133,7 +133,7 @@ class Sort_OH(object):
         for trk in reversed(self.trackers):
             d = trk.get_state()[0]
             if trk.time_since_update < 1:
-                ret.append(np.concatenate((d, [trk.id + 1])).reshape(1, -1))  # +1 as MOT benchmark requires positive
+                ret.append((np.concatenate((d, [trk.id + 1])).reshape(1, -1)[0], trk.classification, trk.certainty))  # +1 as MOT benchmark requires positive
             i -= 1
             # remove dead tracklet
             if trk.time_since_update > (np.minimum(7, self.max_age + self.trackers[i].age/10)):
@@ -143,9 +143,9 @@ class Sort_OH(object):
         # out3 = np.empty((0, 5))
 
         if len(ret) > 0:
-            out1 = np.concatenate(ret)
-        if len(unmatched_trks_pos) > 0:
-            out2 = np.concatenate(unmatched_trks_pos)
+            out1 = ret
+        # if len(unmatched_trks_pos) > 0:
+        #     out2 = np.concatenate(unmatched_trks_pos)
         # if len(unmatched_gts_pos) > 0:
         #     out3 = np.concatenate(unmatched_gts_pos)
-        return out1, out2  #, out3
+        return out1 # , out2  #, out3
